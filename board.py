@@ -15,6 +15,10 @@ class Board:
         self.hold_brick = None
         self.hold_used = False  # Lock hold per brick
 
+        self.shake_offset = 0
+        self.shake_start_time = 0
+        self.shake_duration = 150
+
     def hold_current_brick(self):
         if self.hold_used or not self.current_brick:
             return  
@@ -116,6 +120,7 @@ class Board:
             pygame.mixer.Sound("sfx/drop.wav").play()
             self.clear_lines()
             self.spawn_new_brick()
+            self.shake_start_time = pygame.time.get_ticks()
             self.hold_used = False
 
     def move_current_brick(self, dx):
@@ -183,9 +188,13 @@ class Board:
 
     def draw(self, screen):
         """Draw the board and bricks on the screen."""
+        offset_y = self.get_shake_offset()
+
         for y in range(self.height):
             for x in range(self.width):
-                rect = pygame.Rect(x * self.block_size, y * self.block_size, self.block_size, self.block_size)
+                rect = pygame.Rect(x * self.block_size, 
+                                   y * self.block_size  + offset_y, 
+                                   self.block_size, self.block_size)
 
                 # Draw the background for the board (board color)
                 # pygame.draw.rect(screen, BOARD_COLOR, rect)
@@ -202,7 +211,15 @@ class Board:
                     pygame.draw.rect(screen, self.grid[y][x], rect)  # Draw the brick with its color
                     pygame.draw.rect(screen, OUTLINE, rect, 2)
         if self.current_brick:
-            self.current_brick.draw(screen)
+            # Gambar brick aktif juga pakai offset sama
+            for dx, dy in self.current_brick.shape:
+                rect = pygame.Rect(
+                    (self.current_brick.x + dx) * self.block_size,
+                    (self.current_brick.y + dy) * self.block_size + offset_y,
+                    self.block_size, self.block_size
+                )
+                pygame.draw.rect(screen, self.current_brick.color, rect)
+                pygame.draw.rect(screen, OUTLINE, rect, 2)
 
     def draw_ghost(self, screen):
         """Gambar bayangan posisi jatuh current_brick"""
@@ -252,4 +269,13 @@ class Board:
             pygame.draw.rect(screen, HOLD_COLOR, rect) 
             pygame.draw.rect(screen, (115, 87, 81), rect, 2)
 
+    def get_shake_offset(self):
+        """Return smooth offset for bounce effect."""
+        elapsed = pygame.time.get_ticks() - self.shake_start_time
+        if elapsed > self.shake_duration:
+            return 0
+
+        # Ease-out effect pakai parabola atau sinus
+        progress = elapsed / self.shake_duration
+        return int(6 * (1 - progress) * (1 - progress))  # peak 6px down
 
