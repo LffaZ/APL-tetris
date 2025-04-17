@@ -12,6 +12,28 @@ class Board:
         self.current_brick = None
         self.game_over = False
         self.next_bricks = [self.generate_random_brick() for _ in range(5)]
+        self.hold_brick = None
+        self.hold_used = False  # Lock hold per brick
+
+    def hold_current_brick(self):
+        if self.hold_used or not self.current_brick:
+            return  # ❌ Gak boleh hold lagi sebelum brick jatuh
+
+        temp = self.hold_brick
+        self.hold_brick = self.current_brick.__class__  # Simpan class dari current brick
+
+        if temp:
+            # Ada hold sebelumnya → tukar
+            self.current_brick = temp(self.block_size, self.width // 2 - 1, 0)
+        else:
+            # Belum ada hold → ambil dari next
+            self.current_brick = self.next_bricks.pop(0)
+            self.current_brick.x = self.width // 2 - 1
+            self.current_brick.y = 0
+            self.next_bricks.append(self.generate_random_brick())
+
+        self.hold_used = True  # 🔒 Gak bisa hold lagi sebelum brick ini jatuh
+
 
     def generate_random_brick(self):
         brick_types = [IShape, OShape, TShape, SShape, ZShape, JShape, LShape]
@@ -29,26 +51,6 @@ class Board:
             if dy + 1 >= self.height or self.grid[dy + 1][dx] != 0:
                 return False
         return True
-
-    # def spawn_new_brick(self):
-    #     """Spawn a new brick at the top"""
-    #     brick_types = [IShape, OShape, TShape, SShape, ZShape,  JShape, LShape]
-    #     brick_class = random.choice(brick_types)  
-    #     center_x = self.width // 2 - 1
-    #     new_brick = brick_class(self.block_size, center_x, 0)
-
-    #     center_x = self.width // 2 - 1  # Adjust for centering the brick
-    #     self.current_brick = brick_class(self.block_size, center_x, 0) 
-    #     self.current_brick.x = self.width // 2 - 1
-    #     self.current_brick.y = 0
-
-    #     if self.is_game_over(new_brick):
-    #         self.current_brick = None  # Supaya nggak digambar
-    #         self.game_over = True
-    #     else:
-    #         # self.current_brick = new_brick
-    #         self.next_brick = self.generate_random_brick()
-
 
     def spawn_new_brick(self):
         # Ambil tipe dari next_brick (class-nya)
@@ -114,6 +116,8 @@ class Board:
 
             self.clear_lines()
             self.spawn_new_brick()
+            self.hold_used = False
+
     def move_current_brick(self, dx):
         """Geser current brick ke kiri (-1) atau kanan (+1)"""
         if not self.current_brick:
@@ -226,4 +230,22 @@ class Board:
                                 self.block_size, self.block_size)
                 pygame.draw.rect(screen, PREVIEW_COLOR, rect)  # Gambar warna bayangan
                 pygame.draw.rect(screen, PREVIEW_OUTLINE, rect, 2)
+
+    def draw_hold_brick(self, screen):
+        if not self.hold_brick:
+            return
+
+        preview_x = self.width * self.block_size + 50
+        preview_y = 400  # Turun dari next
+
+        temp_brick = self.hold_brick(self.block_size, 0, 0)
+        for dx, dy in temp_brick.shape:
+            rect = pygame.Rect(
+                preview_x + dx * self.block_size,
+                preview_y + dy * self.block_size,
+                self.block_size, self.block_size
+            )
+            pygame.draw.rect(screen, temp_brick.color, rect)
+            pygame.draw.rect(screen, (115, 87, 81), rect, 2)
+
 

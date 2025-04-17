@@ -16,6 +16,7 @@ class Game:
         self.block_size = 30
         self.board_width = 10
         self.board_height = 20
+        self.hold_pressed = False
 
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption('Tetris')
@@ -55,6 +56,10 @@ class Game:
             if now - getattr(self, 'last_soft_drop', 0) > drop_delay:
                 self.board.soft_drop()
                 self.last_soft_drop = now
+                
+        if keys[pygame.K_c] and not self.hold_pressed:
+            self.hold_pressed = True
+            self.board.hold_current_brick()
 
     def game_loop(self):
         """Main game loop"""
@@ -69,11 +74,13 @@ class Game:
 
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP:
-                        self.board.rotate_current_brick()
-                        # self.rotate_pressed = False
+                        self.board.rotate_current_brick()  # Rotasi brick ketika tombol atas ditekan
                     elif event.key == pygame.K_SPACE:
-                        self.board.hard_drop()
-                
+                        self.board.hard_drop()  # Hard drop ketika tombol spasi ditekan
+                    elif event.key == pygame.K_c:  # Tombol C untuk hold
+                        if not self.board.hold_used and self.board.current_brick:  # Hanya boleh hold sekali per turn
+                            self.board.hold_current_brick()  # Menyimpan brick saat tombol C ditekan
+                            self.hold_used = True  # Menandakan sudah digunakan
 
 
             # Handle events
@@ -95,10 +102,17 @@ class Game:
             self.board.draw(self.screen)
             self.board.draw_ghost(self.screen)
 
-            font = pygame.font.SysFont(None, 36)
+            font = pygame.font.SysFont(None, 30)
             text = font.render("Next", True, (80, 80, 80))
-            self.screen.blit(text, (self.board_width * self.block_size + 50, 130))
+            self.screen.blit(text, (self.board_width * self.block_size + 50, 140))
             self.board.draw_next_bricks(self.screen)
+
+            self.board.draw_hold_brick(self.screen)
+
+            font = pygame.font.SysFont(None, 30)
+            hold_label = font.render("Hold", True, (80, 80, 80))
+            self.screen.blit(hold_label, (self.board_width * self.block_size + 50, 20))
+
 
             # Cek game over
             if self.board.game_over:
