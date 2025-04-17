@@ -1,6 +1,6 @@
 import pygame
 import random
-from constants import BOARD_COLOR, WHITE, OUTLINE, PREVIEW_COLOR, PREVIEW_OUTLINE
+from constants import BOARD_COLOR, WHITE, OUTLINE, PREVIEW_COLOR, PREVIEW_OUTLINE, HOLD_COLOR
 from bricks import IShape, OShape, TShape, SShape, ZShape,  JShape, LShape
 
 class Board:
@@ -17,10 +17,10 @@ class Board:
 
     def hold_current_brick(self):
         if self.hold_used or not self.current_brick:
-            return  # ❌ Gak boleh hold lagi sebelum brick jatuh
+            return  
 
         temp = self.hold_brick
-        self.hold_brick = self.current_brick.__class__  # Simpan class dari current brick
+        self.hold_brick = self.current_brick.__class__  
 
         if temp:
             # Ada hold sebelumnya → tukar
@@ -113,7 +113,7 @@ class Board:
             # Lock the current brick into the grid
             for dx, dy in self.current_brick.get_positions():
                 self.grid[dy][dx] = self.current_brick.color  # Store the color in the grid
-
+            pygame.mixer.Sound("sfx/drop.wav").play()
             self.clear_lines()
             self.spawn_new_brick()
             self.hold_used = False
@@ -153,6 +153,7 @@ class Board:
         while self.can_fall():
             self.current_brick.move_down()
         self.update()
+        
     def is_game_over(self, brick):
         """Cek apakah posisi awal brick nabrak brick lain"""
         for x, y in brick.get_positions():
@@ -177,6 +178,8 @@ class Board:
 
         self.grid = new_grid
 
+        if lines_cleared > 0:
+            pygame.mixer.Sound("sfx/line_clr.wav").play()
 
     def draw(self, screen):
         """Draw the board and bricks on the screen."""
@@ -236,7 +239,7 @@ class Board:
             return
 
         preview_x = self.width * self.block_size + 50
-        preview_y = 400  # Turun dari next
+        preview_y = 50  # Turun dari next
 
         temp_brick = self.hold_brick(self.block_size, 0, 0)
         for dx, dy in temp_brick.shape:
@@ -245,7 +248,8 @@ class Board:
                 preview_y + dy * self.block_size,
                 self.block_size, self.block_size
             )
-            pygame.draw.rect(screen, temp_brick.color, rect)
+            # pygame.draw.rect(screen, temp_brick.color, rect)
+            pygame.draw.rect(screen, HOLD_COLOR, rect) 
             pygame.draw.rect(screen, (115, 87, 81), rect, 2)
 
 

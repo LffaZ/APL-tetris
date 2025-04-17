@@ -10,6 +10,14 @@ class Game:
         # Setup pygame
         pygame.init()
 
+        self.sfx_move = pygame.mixer.Sound("sfx/move.wav")
+        self.sfx_rotate = pygame.mixer.Sound("sfx/rotate.wav")
+        self.sfx_drop = pygame.mixer.Sound("sfx/drop.wav")
+        self.sfx_line_clear = pygame.mixer.Sound("sfx/line_clr.wav")
+
+        self.last_move_sound = 0
+        self.move_sound_delay = 100
+
         # Game window size and settings
         self.screen_width = 510
         self.screen_height = 600
@@ -32,7 +40,6 @@ class Game:
 
     def handle_input(self):
         keys = pygame.key.get_pressed()
-
         now = pygame.time.get_ticks()
 
         # Movement cooldowns
@@ -44,12 +51,18 @@ class Game:
             if now - getattr(self, 'last_move_left', 0) > move_delay:
                 self.board.move_current_brick(-1)
                 self.last_move_left = now
+            if now - self.last_move_sound > self.move_sound_delay:
+                self.sfx_move.play()
+                self.last_move_sound = now
 
         # Geser kanan
         if keys[pygame.K_RIGHT]:
             if now - getattr(self, 'last_move_right', 0) > move_delay:
                 self.board.move_current_brick(1)
                 self.last_move_right = now
+            if now - self.last_move_sound > self.move_sound_delay:
+                self.sfx_move.play()
+                self.last_move_sound = now
 
         # Soft drop
         if keys[pygame.K_DOWN]:
@@ -74,6 +87,7 @@ class Game:
 
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_UP:
+                        self.sfx_rotate.play()
                         self.board.rotate_current_brick()  # Rotasi brick ketika tombol atas ditekan
                     elif event.key == pygame.K_SPACE:
                         self.board.hard_drop()  # Hard drop ketika tombol spasi ditekan
