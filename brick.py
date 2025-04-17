@@ -13,7 +13,8 @@ class Brick:
         """Draw the blocks for the shape."""
         for x, y in self.shape:
             rect = pygame.Rect((x + self.x) * self.block_size, 
-                               (y + self.y) * self.block_size, self.block_size, self.block_size)
+                               (y + self.y) * self.block_size, 
+                               self.block_size, self.block_size)
             pygame.draw.rect(screen, self.color, rect)  # Drawing brick blocks
             pygame.draw.rect(screen, OUTLINE, rect, 2)  # Outline for the blocks
 

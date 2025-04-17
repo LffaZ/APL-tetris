@@ -107,7 +107,6 @@ class Board:
                 pygame.draw.rect(screen, brick.color, rect)
                 pygame.draw.rect(screen, (115, 87, 81), rect, 2)
 
-
     def update(self):
         """Update the position of the current brick."""
         if self.can_fall():

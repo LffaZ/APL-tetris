@@ -9,6 +9,7 @@ class Game:
     def __init__(self):
         # Setup pygame
         pygame.init()
+        pygame.mixer.init()
 
         self.sfx_move = pygame.mixer.Sound("sfx/move.wav")
         self.sfx_rotate = pygame.mixer.Sound("sfx/rotate.wav")
@@ -137,7 +138,12 @@ class Game:
             # Update display
             pygame.display.update()
 
+    def __del__(self):
+        pygame.mixer.quit()
+        print("Audio resources released")
+
 # Create a Game instance and start the game loop
 if __name__ == "__main__":
     game = Game()
     game.game_loop()
+    del game
